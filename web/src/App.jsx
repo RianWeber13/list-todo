@@ -1,70 +1,83 @@
-// 1. Importando as ferramentas do React que vamos usar
+// web/src/App.jsx
+
 import { useState, useEffect } from 'react';
-import './App.css'; // Estilos padrões que vêm com o projeto
+import MonthSelector from './components/MonthSelector';
+import DaySelector from './components/DaySelector';
+import Layout from './components/Layout';
+import { getAllTasks } from './services/taskServices';
+import { getHolidaysForYear } from './services/holidayService'; // 1. Importa o novo serviço
+import './index.css';
 
-// Este é o nosso componente principal, a nossa aplicação
 function App() {
-  // 2. Criando um "estado" para guardar nossa lista de tarefas.
-  //    - 'tasks' é a variável que vai guardar os dados. Começa como uma lista vazia [].
-  //    - 'setTasks' é a função que usamos para atualizar essa lista.
+  const [selectedMonthIndex, setSelectedMonthIndex] = useState(null);
   const [tasks, setTasks] = useState([]);
-  
-  // 3. Criando um "estado" para sabermos se estamos carregando os dados.
-  //    Começa como 'true', pois vamos carregar os dados assim que a página abrir.
   const [loading, setLoading] = useState(true);
+  const [monthsWithTasks, setMonthsWithTasks] = useState([]);
+  const [holidays, setHolidays] = useState([]); // 2. Novo estado para guardar os feriados
+  const anoAtual = new Date().getFullYear();
 
-  // 4. useEffect: Este bloco de código vai rodar UMA VEZ, logo depois que o
-  //    componente aparecer na tela. É o lugar perfeito para buscar dados de uma API.
+  // 3. Modificamos o useEffect para buscar tarefas E feriados
   useEffect(() => {
-    // Definimos uma função especial (async) para podermos usar 'await',
-    // que deixa o código mais limpo e fácil de ler.
-    async function fetchTasks() {
+    // Função para buscar todos os dados iniciais da nossa aplicação
+    async function fetchInitialData() {
       try {
-        // 5. A CHAMADA À API! Usamos 'fetch' para "buscar" os dados na URL do nosso backend.
-        const response = await fetch('http://localhost:8000/api/tasks');
+        // Usamos Promise.all para buscar as duas coisas em paralelo
+        const [tasksData, holidaysData] = await Promise.all([
+          getAllTasks(),
+          getHolidaysForYear(anoAtual)
+        ]);
         
-        // 6. Pegamos a resposta da rede e a transformamos em formato JSON.
-        const data = await response.json();
-        
-        // 7. Usamos a função 'setTasks' para atualizar nossa lista com os dados da API.
-        setTasks(data);
+        // Processa os dados das tarefas
+        setTasks(tasksData);
+        if (tasksData && tasksData.length > 0) {
+          const uniqueMonths = new Set();
+          tasksData.forEach(task => {
+            const taskDate = new Date(task.created_at);
+            const monthName = taskDate.toLocaleString('pt-BR', { month: 'long' });
+            uniqueMonths.add(monthName);
+          });
+          setMonthsWithTasks(Array.from(uniqueMonths));
+        }
+
+        // Guarda os dados dos feriados
+        setHolidays(holidaysData);
 
       } catch (error) {
-        // Se der algum erro na comunicação, mostramos no console do navegador.
-        console.error('Erro ao buscar as tarefas:', error);
+        console.error("Erro ao buscar dados iniciais:", error);
       } finally {
-        // 8. Independentemente de sucesso ou erro, dizemos que o carregamento terminou.
         setLoading(false);
       }
     }
 
-    fetchTasks(); // Aqui nós executamos a função que acabamos de criar.
-  }, []); // O [] vazio no final é muito importante: ele garante que este useEffect rode apenas uma vez.
+    fetchInitialData();
+  }, [anoAtual]); // Adicionamos 'anoAtual' como dependência
 
-  // 9. A parte visual do nosso componente (o que vai aparecer na tela em HTML).
+  // Funções de navegação (continuam iguais)
+  const handleMonthSelect = (monthIndex) => {
+    setSelectedMonthIndex(monthIndex);
+  };
+  const handleBackToMonths = () => {
+    setSelectedMonthIndex(null);
+  };
+
   return (
-    <div className="App">
-      <h1>Minha Lista de Tarefas</h1>
-      
-      {/* Usando uma condição: se estiver carregando, mostra uma mensagem. */}
-      {loading ? (
-        <p>Carregando tarefas...</p>
+    <Layout>
+      {selectedMonthIndex === null ? (
+        <MonthSelector 
+          onMonthSelect={handleMonthSelect}
+          loading={loading}
+          monthsWithTasks={monthsWithTasks}
+        />
       ) : (
-        // Se não estiver carregando, verifica se há tarefas na nossa lista.
-        tasks.length === 0 ? (
-          // Se a lista estiver vazia (length === 0), mostra esta mensagem.
-          <p>Nenhuma tarefa encontrada. Adicione uma!</p>
-        ) : (
-          // Se houver tarefas, faz um loop e exibe cada uma.
-          // (Ainda não temos tarefas, mas o código já está pronto para quando tivermos)
-          <ul>
-            {tasks.map(task => (
-              <li key={task.id}>{task.title}</li>
-            ))}
-          </ul>
-        )
+        <DaySelector 
+          monthIndex={selectedMonthIndex}
+          year={anoAtual}
+          onBack={handleBackToMonths} 
+          tasks={tasks.filter(t => new Date(t.created_at).getMonth() === selectedMonthIndex)}
+          holidays={holidays} // 4. Passamos os feriados para o DaySelector
+        />
       )}
-    </div>
+    </Layout>
   );
 }
 

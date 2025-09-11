@@ -1,68 +1,205 @@
+/* Importando uma fonte mais moderna do Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+/* Definindo variáveis de cores para facilitar a customização */
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  --primary-bg: #f4f7fc;
+  --container-bg: #ffffff;
+  --primary-text: #2c3e50;
+  --secondary-text: #5a6a7a;
+  --accent-color: #4a69ff;
+  --tile-bg: #eff2ff;
+  --tile-border: #d9e2ff;
+  --shadow-color: rgba(74, 105, 255, 0.1);
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
+/* Estilos gerais para a página */
 body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  font-family: 'Poppins', sans-serif;
+  background-color: var(--primary-bg);
+  color: var(--primary-text);
+  margin: 0; 
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+/* O container principal da nossa aplicação */
+.app-container {
+  width: 90%; /* Ocupará 90% da largura da tela */
+  max-width: 1600px; /* Mas com um limite máximo bem generoso para telas gigantes */
+  min-height: 85vh; /* Terá uma altura mínima de 85% da altura da tela */
+  margin: 2rem auto; /* A mágica: 2rem de margem em cima/baixo e 'auto' nas laterais para centralizar */
+  background-color: var(--container-bg);
+  padding: 2rem 3rem;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px var(--shadow-color);
+  box-sizing: border-box; /* Garante que o padding não aumente o tamanho total */
+}
+h2, h3 {
+  text-align: center;
+  color: var(--primary-text);
+  margin-bottom: 1.5rem;
 }
 
-button {
+/* O grid que organiza os retângulos dos meses */
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+}
+
+/* O nosso "pequeno retângulo" (cada mês) */
+.month-tile {
+  background-color: var(--tile-bg);
+  border: 1px solid var(--tile-border);
   border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
+  padding: 1.5rem 1rem;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--accent-color);
   cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  transition: all 0.2s ease-in-out;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+/* Efeito visual ao passar o mouse por cima */
+.month-tile:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 20px var(--shadow-color);
+  border-color: var(--accent-color);
+}
+
+/* Container para a lista de tarefas */
+.tasks-list-container {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+.tasks-list-container ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.tasks-list-container li {
+  background-color: #fafafa;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+  border: 1px solid #eee;
+}
+.tasks-notice {
+  text-align: center;
+  font-size: 1.1rem;
+  padding: 1rem;
+  background-color: var(--tile-bg);
+  border-radius: 8px;
+  border: 1px solid var(--tile-border);
+}
+/* Adicione estas regras ao final de web/src/index.css */
+
+.day-grid {
+  display: grid;
+  /* Teremos sempre 7 colunas, como um calendário */
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.75rem;
+
+}
+
+.day-tile {
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1.25rem 0; /* Aumenta a altura */
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--secondary-text);
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  min-height: 160px;
+}
+
+.day-tile:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px var(--shadow-color);
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
+
+.back-button {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--accent-color);
+  cursor: pointer;
+  margin-bottom: 2rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+}
+
+.back-button:hover {
+  background-color: var(--tile-bg);
+}
+
+/* Adicione este código ao final de web/src/index.css */
+
+/* Estilo para o cabeçalho dos dias da semana */
+.weekday-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: var(--secondary-text);
+  text-align: center;
+}
+
+/* Ajuste no nosso grid de dias */
+.day-grid {
+  gap: 0.5rem; /* Um pouco menos de espaço para um look de calendário */
+}
+
+/* Ajuste nos blocos dos dias para dar mais espaço */
+.day-tile {
+  background-color: #fff;
+  min-height: 120px; /* Altura mínima para caber as tarefas */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* Alinha o conteúdo no topo/esquerda */
+  padding: 0.5rem;
+  font-weight: normal;
+}
+
+/* Estilo para o número do dia, para ficar no canto */
+.day-number {
+  font-weight: 600;
+  color: var(--primary-text);
+  margin-bottom: 0.5rem;
+}
+
+/* Estilo para os dias "vazios" no início do mês */
+.empty-tile {
+  background-color: var(--primary-bg);
+  border: 1px solid #eef0f4;
+  border-radius: 8px;
+}
+
+/* Adicione este código ao final de web/src/index.css */
+
+/* Estilo para um dia que é feriado */
+.holiday-tile {
+  background-color: #ffebee; /* Um tom de vermelho claro */
+  border-color: #ffcdd2;
+}
+
+/* Estilo para o nome do feriado dentro do bloco do dia */
+.holiday-name {
+  font-size: 0.75rem;
+  color: #c62828; /* Um tom de vermelho mais escuro */
+  font-weight: 600;
+  margin-top: 0.5rem;
+  /* Garante que o texto quebre se for muito longo */
+  white-space: normal;
+  word-wrap: break-word;
 }
