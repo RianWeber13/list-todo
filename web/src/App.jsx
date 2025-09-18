@@ -1,65 +1,62 @@
-// web/src/App.jsx
-
 import { useState, useEffect } from 'react';
 import MonthSelector from './components/MonthSelector';
 import DaySelector from './components/DaySelector';
 import Layout from './components/Layout';
 import { getAllTasks } from './services/taskServices';
-import { getHolidaysForYear } from './services/holidayService'; // 1. Importa o novo serviço
+import { getHolidaysForYear } from './services/holidayService';
 import './index.css';
 
 function App() {
+  // Estado para controlar a navegação (qual tela mostrar)
   const [selectedMonthIndex, setSelectedMonthIndex] = useState(null);
+  
+  // Estados para controlar os dados da aplicação
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [monthsWithTasks, setMonthsWithTasks] = useState([]);
-  const [holidays, setHolidays] = useState([]); // 2. Novo estado para guardar os feriados
+  const [holidays, setHolidays] = useState([]);
+  
   const anoAtual = new Date().getFullYear();
 
-  // 3. Modificamos o useEffect para buscar tarefas E feriados
-  useEffect(() => {
-    // Função para buscar todos os dados iniciais da nossa aplicação
-    async function fetchInitialData() {
-      try {
-        // Usamos Promise.all para buscar as duas coisas em paralelo
-        const [tasksData, holidaysData] = await Promise.all([
-          getAllTasks(),
-          getHolidaysForYear(anoAtual)
-        ]);
-        
-        // Processa os dados das tarefas
-        setTasks(tasksData);
-        if (tasksData && tasksData.length > 0) {
-          const uniqueMonths = new Set();
-          tasksData.forEach(task => {
-            const taskDate = new Date(task.created_at);
-            const monthName = taskDate.toLocaleString('pt-BR', { month: 'long' });
-            uniqueMonths.add(monthName);
-          });
-          setMonthsWithTasks(Array.from(uniqueMonths));
-        }
+  // Função para buscar/atualizar a lista de tarefas, que pode ser chamada a qualquer momento
+  const fetchTasks = async () => {
+    const tasksData = await getAllTasks();
+    console.log("LOG 1: Dados recebidos da API em App.jsx:", tasksData);
+    setTasks(tasksData);
 
-        // Guarda os dados dos feriados
-        setHolidays(holidaysData);
-
-      } catch (error) {
-        console.error("Erro ao buscar dados iniciais:", error);
-      } finally {
-        setLoading(false);
-      }
+    if (tasksData && tasksData.length > 0) {
+      console.log(">>> DATA VINDA DO BANCO (primeira tarefa):", tasksData[0].task_date);
+      const uniqueMonths = new Set();
+      tasksData.forEach(task => {
+        // Usamos task_date, que é a data correta da tarefa
+        const taskDate = new Date(task.task_date + 'T00:00:00'); // Adiciona T00:00 para evitar problemas de fuso horário
+        const monthName = taskDate.toLocaleString('pt-BR', { month: 'long' });
+        uniqueMonths.add(monthName);
+      });
+      setMonthsWithTasks(Array.from(uniqueMonths));
+    } else {
+      setMonthsWithTasks([]); // Limpa a lista se não houver tarefas
     }
+  };
 
+  // useEffect para buscar os dados iniciais (feriados e a primeira carga de tarefas)
+  useEffect(() => {
+    async function fetchInitialData() {
+      setLoading(true);
+      await Promise.all([
+        fetchTasks(),
+        getHolidaysForYear(anoAtual).then(setHolidays)
+      ]);
+      setLoading(false);
+    }
     fetchInitialData();
-  }, [anoAtual]); // Adicionamos 'anoAtual' como dependência
+  }, [anoAtual]);
 
-  // Funções de navegação (continuam iguais)
-  const handleMonthSelect = (monthIndex) => {
-    setSelectedMonthIndex(monthIndex);
-  };
-  const handleBackToMonths = () => {
-    setSelectedMonthIndex(null);
-  };
+  // Funções para controlar a navegação
+  const handleMonthSelect = (monthIndex) => setSelectedMonthIndex(monthIndex);
+  const handleBackToMonths = () => setSelectedMonthIndex(null);
 
+  // O JSX que decide qual tela mostrar
   return (
     <Layout>
       {selectedMonthIndex === null ? (
@@ -73,8 +70,9 @@ function App() {
           monthIndex={selectedMonthIndex}
           year={anoAtual}
           onBack={handleBackToMonths} 
-          tasks={tasks.filter(t => new Date(t.created_at).getMonth() === selectedMonthIndex)}
-          holidays={holidays} // 4. Passamos os feriados para o DaySelector
+          tasks={tasks}
+          holidays={holidays}
+          onTasksChange={fetchTasks} // Passa a função de atualização
         />
       )}
     </Layout>
